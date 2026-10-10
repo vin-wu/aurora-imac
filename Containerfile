@@ -1,7 +1,9 @@
 ARG BASE_IMAGE=ghcr.io/ublue-os/aurora
 ARG BASE_TAG=latest
+ARG DRIVER_COMMIT=b08d0745e1b78d6949d5a231d91351e73ddf8079
 
 FROM ${BASE_IMAGE}:${BASE_TAG} AS builder
+ARG DRIVER_COMMIT
 
 # Install kernel-devel matching the exact kernel pre-installed in the base image
 RUN set -ouex pipefail && \
@@ -16,6 +18,7 @@ RUN set -ouex pipefail && \
         elfutils-libelf-devel && \
     git clone https://github.com/armin-haghi/imac-cs8409-linux-audio.git /tmp/cs8409 && \
     cd /tmp/cs8409 && \
+    git checkout "${DRIVER_COMMIT}" && \
     make KVER=${KVER} && \
     mkdir -p /build-out && \
     cp snd-hda-codec-cs8409.ko /build-out/
