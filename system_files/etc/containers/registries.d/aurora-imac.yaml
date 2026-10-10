@@ -1,0 +1,3 @@
+docker:
+  ghcr.io/vin-wu/aurora-imac:
+    use-sigstore-attachments: true
