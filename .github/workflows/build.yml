@@ -49,35 +49,7 @@ jobs:
             type=raw,value=latest
             type=sha,format=short
 
-      - name: Build container image locally for verification
-        id: build-local
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          file: ./Containerfile
-          load: true
-          tags: ${{ env.IMAGE_NAME }}:test
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-
-      - name: Run image verification test suite
-        run: |
-          echo "Starting verification container..."
-          docker run --rm ${{ env.IMAGE_NAME }}:test bash -c '
-            set -euo pipefail
-            KVER=$(ls /usr/lib/modules | head -n1)
-            echo "1. Checking module file presence..."
-            test -f /usr/lib/modules/${KVER}/updates/snd-hda-codec-cs8409.ko.zst
-            echo "2. Checking driver path resolution..."
-            modinfo -b / -k ${KVER} -n snd-hda-codec-cs8409 | grep -q "/updates/"
-            echo "3. Checking modprobe dsp_driver config..."
-            grep -q "dsp_driver=1" /usr/lib/modprobe.d/cs8409.conf
-            echo "4. Checking cosign public key..."
-            test -f /etc/pki/containers/aurora-imac.pub
-            echo "All image verification tests PASSED!"
-          '
-
-      - name: Push container image to GHCR
+      - name: Build and push container image
         id: build-and-push
         uses: docker/build-push-action@v5
         with:
@@ -87,6 +59,7 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
+          cache-to: type=gha,mode=max
 
       - name: Sign container image with Cosign
         if: github.event_name != 'pull_request'

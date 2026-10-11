@@ -47,5 +47,9 @@ RUN set -ouex pipefail && \
     modinfo -F vermagic /usr/lib/modules/${KVER}/updates/snd-hda-codec-cs8409.ko.zst | grep -q "${KVER}" && \
     # Gate 4: Module precedence check (must resolve to updates/, not kernel/)
     test "$(modinfo -b / -k ${KVER} -n snd-hda-codec-cs8409 | grep -o 'updates/')" = "updates/" && \
-    # Gate 5: Bootc container structural linting
+    # Gate 5: Modprobe configuration check
+    grep -q "dsp_driver=1" /usr/lib/modprobe.d/cs8409.conf && \
+    # Gate 6: Cosign public key presence check
+    test -f /etc/pki/containers/aurora-imac.pub && \
+    # Gate 7: Bootc container structural linting
     bootc container lint
